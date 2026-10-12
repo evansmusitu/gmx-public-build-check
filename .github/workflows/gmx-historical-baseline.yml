@@ -1,0 +1,63 @@
+name: GMX historical public-source baseline
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/gmx-historical-baseline.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gmx-historical-public-baseline
+  cancel-in-progress: true
+
+jobs:
+  upstream-regression:
+    name: ${{ matrix.label }} original upstream tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: historical-fee-handler
+            commit: 2aa331f53a7d06691c6f5f3ad35284feb78b2dd2
+            node: "18"
+            test_path: test/fee/FeeHandler.ts
+          - label: historical-fee-distributor
+            commit: 7fde9c58a110ff2a99efd528af95006f7448cb8c
+            node: "20"
+            test_path: test/fee/FeeDistributor.ts
+    env:
+      CI: "true"
+      HARDHAT_NETWORK: hardhat
+      HARDHAT_DISABLE_TELEMETRY_PROMPT: "true"
+      NODE_OPTIONS: --max-old-space-size=8192
+    steps:
+      - name: Checkout historical public GMX source at verified metadata revision
+        uses: actions/checkout@v4
+        with:
+          repository: gmx-io/gmx-synthetics
+          ref: ${{ matrix.commit }}
+          path: gmx
+          persist-credentials: false
+      - name: Set up standard public Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install yarn classic
+        run: npm install -g yarn@1.22.22
+      - name: Install pinned historical dependencies, no lifecycle scripts
+        working-directory: gmx
+        run: yarn install --frozen-lockfile --ignore-scripts --non-interactive
+      - name: Compile original public Solidity sources
+        working-directory: gmx
+        run: yarn hardhat compile
+      - name: Execute original upstream tests on local Hardhat EVM only
+        working-directory: gmx
+        env:
+          TEST_FILE: ${{ matrix.test_path }}
+        run: yarn hardhat test --no-compile "${TEST_FILE}"
