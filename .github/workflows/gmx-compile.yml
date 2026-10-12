@@ -50,4 +50,4 @@ jobs:
 
       - name: Run upstream public tests on isolated Hardhat EVM
         working-directory: gmx
-        run: yarn hardhat test --no-compile test/order/OrderStoreUtils.ts test/exchange/TwapOrder.ts test/multichain/MultichainTransferRouter.ts test/multichain/LayerZeroProvider.ts
+        run: yarn hardhat test --no-compile test/order/OrderStoreUtils.ts test/exchange/TwapOrder.ts test/multichain/MultichainTransferRouter.ts test/multichain/LayerZeroProvider.ts test/router/relay/SmartWalletSignatures.ts test/router/relay/SubaccountGelatoRelayRouter.ts test/config/Config.ts test/fee/FeeHandler.ts test/oracle/StaticOracleProvider.ts test/multichain/MultichainSubaccountRouter.ts
