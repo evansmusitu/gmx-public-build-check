@@ -47,3 +47,7 @@ jobs:
       - name: Compile public Solidity code only
         working-directory: gmx
         run: yarn hardhat compile
+
+      - name: Run upstream public tests on isolated Hardhat EVM
+        working-directory: gmx
+        run: yarn hardhat test --no-compile test/order/OrderStoreUtils.ts test/exchange/TwapOrder.ts
