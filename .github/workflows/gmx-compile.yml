@@ -1,0 +1,49 @@
+name: GMX public Solidity compile
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/gmx-compile.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gmx-public-build-check
+  cancel-in-progress: true
+
+jobs:
+  compile-public-source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CI: "true"
+      HARDHAT_NETWORK: hardhat
+      HARDHAT_DISABLE_TELEMETRY_PROMPT: "true"
+      NODE_OPTIONS: --max-old-space-size=8192
+    steps:
+      - name: Checkout pinned public GMX source (no private research)
+        uses: actions/checkout@v4
+        with:
+          repository: gmx-io/gmx-synthetics
+          ref: bf30ebb4cff17b7f92f8c738f145e75b871a1576
+          path: gmx
+          persist-credentials: false
+
+      - name: Install public Node runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Yarn Classic
+        run: npm install -g yarn@1.22.22
+
+      - name: Install public GMX source dependencies
+        working-directory: gmx
+        run: yarn install --frozen-lockfile --ignore-scripts --non-interactive
+
+      - name: Compile public Solidity code only
+        working-directory: gmx
+        run: yarn hardhat compile
